@@ -44,6 +44,8 @@ for doc in obj.document:
 	# print item
 	items.append(item)
 
+print items[0]
+
 with open('parse.pickle', 'wb') as fp:
 	pickle.dump(items, fp)
 	fp.close()

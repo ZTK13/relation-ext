@@ -27,6 +27,8 @@ def annotations_present(annotations, start_index, end_index):
 def relations_present(annotations, relations):
     if len(annotations) <=1:
         return []
+    # print annotations
+    # print relations
     l = []
     for (a, b) in relations:
         has_relation = False
@@ -46,11 +48,9 @@ def relations_present(annotations, relations):
                 l.append(((a, b), min_index))
     return l
 
-def negative_relations(relations):
-    l = []
-    for r in relations:
-        l.extend(r)
-    all_rel = list(itertools.combinations(list(set(l)), 2))
+def negative_relations(relations, annotations):
+    entities = set(annotations.keys())
+    all_rel = list(itertools.combinations(list(set(entities)), 2))
     # print all_rel
     pos_rel = [sorted(r) for r in relations]
     neg_rel = []
@@ -62,33 +62,39 @@ def negative_relations(relations):
 
 with open('parse.pickle', 'rb') as fp:
     list_of_docs = pickle.load(fp)
-    print len(list_of_docs)
 
+
+objects = []
 for doc in list_of_docs:
     # print doc['abstract']
     title = doc['title']
+    all_annotations = doc['abstract']['annotations']
+    del_annotations = all_annotations.pop('-1', None) #### Annotations as codes '-1' are removed
     relations_pos = doc['abstract']['relation']
-    relations_neg = negative_relations(relations_pos)
-    # print relations_pos
-    # print "ashim"
-    # print relations_neg
-    annotations = doc['abstract']['annotations']
+    relations_neg = negative_relations(relations_pos, all_annotations)
+    print relations_pos
+    print relations_neg
     # abstract = doc['abstract']['text'][0]
     abstract = doc['abstract']
     for parts in [title, abstract]:
+        annotations = parts['annotations']
         offset = parts['offset']
         text = parts['text'][0]
         sentences = sentence_segment(text)
         # print text
         # print len(sentences)
-        objects = []
+        pos_count = 0
+        neg_count = 0
         for sent in sentences:
+            # print "ashim"
+            # print sent
             start_index = text.find(sent) + offset
             ann = annotations_present(annotations, start_index, start_index + len(sent))
             pos_rel = relations_present(ann, relations_pos)
             neg_rel = relations_present(ann, relations_neg)
             # print pos_rel
             for pr in pos_rel:
+                # print "ashim"
                 # print "\nPositive Relation \n"
                 # print sent 
                 # print pr
@@ -96,10 +102,15 @@ for doc in list_of_docs:
                 # print sent[pr[1][1][0]:pr[1][1][0]+pr[1][1][1]]
                 obj = Sentence(sent, pr[0], pr[1][0], pr[1][1], 1)
                 objects.append(obj)
-            for r in neg_rel:
-                obj = Sentence(sent, r[0], r[1][0], r[1][1], 0)
+                pos_count+=1
+            for nr in neg_rel:
+                # print sent
+                obj = Sentence(sent, nr[0], nr[1][0], nr[1][1], 0)
                 objects.append(obj)
-
+                neg_count+=1
+        print "No. of Positive Interactions - " + str(pos_count)
+        print "No. of Negative Interactions - " + str(neg_count)
+print len(objects)
 with open('sentences.pkl', 'wb') as fp:
     pickle.dump(objects, fp)
 
