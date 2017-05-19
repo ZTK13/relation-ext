@@ -16,12 +16,9 @@ def annotations_present(annotations, start_index, end_index):
             # print start_index
             # print end_index
             if int(a['offset']) >= start_index and int(a['offset']) < end_index:
-                # print "ashim"
                 if key not in l:
                     l[key] = []
                 l[key].append((int(a['offset'])-start_index, int(a['length'])))
-                # t = (key, int(a['offset'])-start_index, int(a['length']))
-                # l.append(t)
     return l
 
 def relations_present(annotations, relations):
@@ -49,14 +46,21 @@ def relations_present(annotations, relations):
     return l
 
 def negative_relations(relations, annotations):
+    # print annotations
     entities = set(annotations.keys())
     all_rel = list(itertools.combinations(list(set(entities)), 2))
     # print all_rel
     pos_rel = [sorted(r) for r in relations]
-    neg_rel = []
+    all_neg_rel = []
     for r in all_rel:
         if sorted(r) not in pos_rel:
-            neg_rel.append(r)
+            all_neg_rel.append(r)
+    neg_rel = []
+    for (e1, e2) in all_neg_rel:
+        if annotations[e1][0]['type'] == 'Disease' and annotations[e2][0]['type'] == 'Chemical':
+            neg_rel.append((e2, e1))
+        elif annotations[e1][0]['type'] == 'Chemical' and annotations[e2][0]['type'] == 'Disease':           
+            neg_rel.append((e1, e2))
     return neg_rel
 
 
@@ -65,6 +69,7 @@ with open('parse.pickle', 'rb') as fp:
 
 
 objects = []
+i = 0
 for doc in list_of_docs:
     # print doc['abstract']
     title = doc['title']
@@ -78,6 +83,8 @@ for doc in list_of_docs:
     abstract = doc['abstract']
     for parts in [title, abstract]:
         annotations = parts['annotations']
+        if len(annotations.keys()) == 0:
+            continue
         offset = parts['offset']
         text = parts['text'][0]
         sentences = sentence_segment(text)
@@ -110,6 +117,8 @@ for doc in list_of_docs:
                 neg_count+=1
         print "No. of Positive Interactions - " + str(pos_count)
         print "No. of Negative Interactions - " + str(neg_count)
+    i +=1
+    print "Documents Processed - " + str(i)
 print len(objects)
 with open('sentences.pkl', 'wb') as fp:
     pickle.dump(objects, fp)

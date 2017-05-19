@@ -47,9 +47,6 @@ def get_next_tag(tags, index):
         return get_next_tag(tags, index + 1)
     return tags[index + 1][1]
 
-
-
-
 def extract_features(obj):
     text = obj.text
     entA = obj.entA
@@ -105,8 +102,9 @@ with open("sentences.pkl", "rb") as fp:
 # print len(list_of_objects)
 
 featureSet = []
-for obj in list_of_objects:
+for counter, obj in enumerate(list_of_objects):
     featureSet.append((extract_features(obj), obj.rType))
+    print "No. of objects processed - " + str(counter)
 
 
 l = len(featureSet)
