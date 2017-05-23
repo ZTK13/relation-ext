@@ -120,7 +120,7 @@ for doc in list_of_docs:
     i +=1
     print "Documents Processed - " + str(i)
 print len(objects)
-with open('sentences.pkl', 'wb') as fp:
+with open('sentences_test.pkl', 'wb') as fp:
     pickle.dump(objects, fp)
 
 

@@ -3,7 +3,7 @@ import pickle
 
 
 
-filename = "CDR_TrainingSet.BioC.xml"
+filename = "CDR_TestSet.BioC.xml"
 # filename = "parse.xml"
 fp = open(filename).read()
 obj = objectify.fromstring(fp)
