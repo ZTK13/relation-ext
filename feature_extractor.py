@@ -7,6 +7,8 @@ import collections
 from nltk.metrics import scores
 import sys
 
+import depPathString
+
 stop_words = set(stopwords.words("english"))
 DIFF_NUM = 10
 PARTITION_TRAIN = 1.00
@@ -16,10 +18,6 @@ PARTITION_TEST = 0
 
 def get_tag(text, tags, mention, mention_position):
     count = text[:mention_position[0]].count(mention.strip())
-    # print text
-    # print mention    
-    # if count == 0:
-    #     return (None, -1)
     n = 0
     count +=1
     i=0
@@ -45,10 +43,11 @@ def get_previous_tag(tags, index):
 def get_next_tag(tags, index):
     if index == -1:
         return "None"
-    if index == len(tags)-1:
+    if index >= len(tags)-1:
         return "</s>"
-    if tags[index+1][0] in stop_words:
-        return get_next_tag(tags, index + 1)
+    if len(tags) > index + 1:
+        if tags[index+1][0] in stop_words:
+            return get_next_tag(tags, index + 1)
     return tags[index + 1][1]
 
 def extract_features(obj, sysargv):
@@ -109,6 +108,9 @@ def extract_features(obj, sysargv):
         else:
             features['difference_index'] = 0
 
+    if "depParse" in sysargv or not sysargv:
+        dep_string = depPathString.getDependencyPath(obj, "depParse")
+        features["dependency_path"] = dep_string
     return features 
 
 def save_classifier(classifier, filename):
@@ -161,7 +163,7 @@ def get_feature_set(list_of_objects, sample_value, sysargv):
 
 #########           TRAINING        ########
 
-list_of_objects = load_sentences('sentences_train.pkl')
+list_of_objects = load_sentences('sentences_train_2.pkl')
 
 print "Sentences Loaded - " + str(len(list_of_objects))
 
@@ -180,7 +182,7 @@ classifier = nltk.NaiveBayesClassifier.train(train_set)
 classifier.show_most_informative_features(10)
 
 # save_classifier(classifier, "decisionTree_classifier_balanced.pkl")
-# save_classifier(classifier, "naiveBayes_classifier_balanced.pkl")
+save_classifier(classifier, "naiveBayes_classifier_balanced_dep_pos.pkl")
 # save_classifier(classifier, "maxEnt_classifier_balanced.pkl")
 
 
@@ -195,7 +197,7 @@ classifier.show_most_informative_features(10)
 # classifier = load_classifier("maxEnt_classifier_balanced.pkl")
 # classifier = load_classifier("decisionTree_classifier_balanced.pkl")
 # classifier = load_classifier("naiveBayes_classifier_balanced.pkl")
-list_of_objects = load_sentences("sentences_dev.pkl")
+list_of_objects = load_sentences("sentences_dev_2.pkl")
 print "Sentences Loaded - " + str(len(list_of_objects))
 featureSet = []
 featureSet = get_feature_set(list_of_objects, False, sys.argv[1:])
